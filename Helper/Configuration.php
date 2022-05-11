@@ -21,7 +21,7 @@ class Configuration extends \Magento\Framework\App\Helper\AbstractHelper
         return (string)$this->scopeConfig->getValue(self::XML_PATH_GENERAL_PUBLISHER_NAME);
     }
 
-    public function getPublisherFaviconUrl()
+    public function getPublisherFaviconUrl(): string
     {
         return (string)$this->scopeConfig->getValue(self::XML_PATH_GENERAL_PUBLISHER_FAVICON_URL);
     }

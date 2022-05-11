@@ -156,7 +156,7 @@ class Xml
 
         $ean = $childProduct->getData('ean');
 
-        if ($ean) {
+        if (!empty($ean)) {
             $gtinsXml = $productIdsXml->appendChild($domDocument->createElement('gtins'));
             $gtinsXml->appendChild($domDocument->createElement('gtin', $this->filter($ean)));
         }
