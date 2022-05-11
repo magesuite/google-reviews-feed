@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <reviews_feed>
+            <general>
+                <enabled>0</enabled>
+                <publisher_name>Sample Retailer</publisher_name>
+                <publisher_favicon_url>http://www.example.com/favicon.png</publisher_favicon_url>
+            </general>
+            <feed>
+                <filename>feed.xml</filename>
+                <path>googe-product-reviews/</path>
+            </feed>
+        </reviews_feed>
+    </default>
+</config>
