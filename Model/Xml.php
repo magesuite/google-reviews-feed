@@ -247,4 +247,3 @@ class Xml
         return $this->htmlEntities->filter($value);
     }
 }
-
