@@ -20,6 +20,10 @@
                 <field id="publisher_favicon_url" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Publisher Favicon URL</label>
                 </field>
+                <field id="cron_schedule" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Cron Schedule</label>
+                    <comment>Please type full cron schedule expression, eg. '59 23 * * *'</comment>
+                </field>
             </group>
             <group id="feed" showInDefault="1" showInWebsite="0" showInStore="0" sortOrder="20" translate="label">
                 <label>Feed Configuration</label>

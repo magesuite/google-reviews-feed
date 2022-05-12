@@ -6,6 +6,7 @@
                 <enabled>0</enabled>
                 <publisher_name>Sample Retailer</publisher_name>
                 <publisher_favicon_url>http://www.example.com/favicon.png</publisher_favicon_url>
+                <cron_schedule>0 1 * * *</cron_schedule>
             </general>
             <feed>
                 <filename>feed.xml</filename>

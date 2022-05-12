@@ -20,7 +20,7 @@ class ReviewList
     public function getItems(): \Magento\Review\Model\ResourceModel\Review\Collection
     {
         $collection = $this->collecitonFactory->create()
-            ->setPageSize(1000)
+            ->setPageSize(5000)
             ->addFieldToFilter('entity_id', $this->getEntityId())
             ->addFieldToFilter('entity_pk_value', ['gt' => 0])
             ->addStatusFilter(\Magento\Review\Model\Review::STATUS_APPROVED)

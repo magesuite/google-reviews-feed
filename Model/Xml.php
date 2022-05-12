@@ -5,28 +5,33 @@ namespace MageSuite\GoogleReviewsFeed\Model;
 
 class Xml
 {
+    /**
+     * @var \Magento\Catalog\Model\Product[]
+     */
+    protected $productCache = [];
+
     protected \MageSuite\GoogleReviewsFeed\Model\ReviewList $reviewList;
 
     protected \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date;
-
-    protected \Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
 
     protected \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory;
 
     protected \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration;
 
+    protected \Laminas\Filter\HtmlEntities $htmlEntities;
+
     public function __construct(
         \MageSuite\GoogleReviewsFeed\Model\ReviewList $reviewList,
         \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date,
-        \Magento\Catalog\Api\ProductRepositoryInterface $productRepository,
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
-        \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration
+        \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration,
+        \Laminas\Filter\HtmlEntities $htmlEntities
     ) {
         $this->reviewList = $reviewList;
         $this->date = $date;
-        $this->productRepository = $productRepository;
         $this->productCollectionFactory = $productCollectionFactory;
         $this->configuration = $configuration;
+        $this->htmlEntities = $htmlEntities;
     }
 
     public function execute(): string
@@ -64,7 +69,7 @@ class Xml
             }
 
             $collection->clear();
-            $this->productRepository->cleanCache();
+            $this->productCache = [];
             $page++;
         }
 
@@ -218,17 +223,28 @@ class Xml
         return $this->filter($nickname);
     }
 
-    protected function getProduct(\Magento\Review\Model\Review $review)
+    protected function getProduct(\Magento\Review\Model\Review $review): \Magento\Catalog\Model\Product
     {
         $productId = $review->getEntityPkValue();
 
-        return $this->productRepository->getById($productId, false, $review->getStoreId());
+        if (isset($this->productCache[$productId])) {
+            return $this->productCache[$productId];
+        }
+
+        $collection = $this->productCollectionFactory->create()
+            ->addAttributeToFilter('entity_id', $productId)
+            ->addAttributeToSelect(['ean', 'brand', 'name'])
+            ->setStoreId($review->getStoreId())
+            ->setPageSize(1)
+            ->addUrlRewrite();
+        $this->productCache[$productId] = $collection->getFirstItem();
+
+        return $this->productCache[$productId];
     }
 
     public function filter(string $value): string
     {
-        $filter = new \Laminas\Filter\HtmlEntities();
-
-        return $filter->filter($value);
+        return $this->htmlEntities->filter($value);
     }
 }
+
