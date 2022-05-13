@@ -21,14 +21,14 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
     protected $io;
 
     /**
-     * @var \Magento\Review\Model\ResourceModel\Review\CollectionFactory
-     */
-    protected $collection;
-
-    /**
      * @var \Magento\Framework\Stdlib\DateTime\TimezoneInterface
      */
     protected $date;
+
+    /**
+     * @var \Magento\Framework\Registry
+     */
+    protected $registry;
 
     protected function setUp(): void
     {
@@ -37,21 +37,21 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
             ->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
         $this->feedProcessor = $objectManager->get(\MageSuite\GoogleReviewsFeed\Model\FeedProcessor::class);
         $this->io = $objectManager->get(\MageSuite\GoogleReviewsFeed\Model\Io::class);
-        $this->collection = $objectManager->get(\Magento\Review\Model\ResourceModel\Review\CollectionFactory::class);
         $this->date = $objectManager->get(\Magento\Framework\Stdlib\DateTime\TimezoneInterface::class);
+        $this->registry = $objectManager->get(\Magento\Framework\Registry::class);
     }
 
     /**
      * @magentoDbIsolation enabled
      * @magentoAppIsolation enabled
      * @magentoConfigFixture default/reviews_feed/general/enabled 1
-     * @magentoDataFixture Magento/Review/_files/product_review_with_rating.php
+     * @magentoDataFixture MageSuite_GoogleReviewsFeed::Test/Integration/_files/product_review_with_rating.php
      */
     public function testIfGenerateProperXmlFile(): void
     {
         $this->feedProcessor->execute();
         $filePath = $this->mediaDirectory->getAbsolutePath() . $this->io->getFilePath();
-        $review = $this->collection->create()->getFirstItem();
+        $review = $this->registry->registry('review_data');
         $reviewTimestamp = $this->date->date(strtotime($review->getCreatedAt()))->format('c');
 
         $this->assertStringEqualsFile(

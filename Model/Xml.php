@@ -5,38 +5,37 @@ namespace MageSuite\GoogleReviewsFeed\Model;
 
 class Xml
 {
-    /**
-     * @var \Magento\Catalog\Model\Product[]
-     */
-    protected $productCache = [];
-
     protected \MageSuite\GoogleReviewsFeed\Model\ReviewList $reviewList;
 
-    protected \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date;
+    protected \MageSuite\GoogleReviewsFeed\Model\ProductDataRepository $productDataRepository;
 
-    protected \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory;
+    protected \MageSuite\GoogleReviewsFeed\Model\NicknameModifier $nicknameModifier;
 
     protected \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration;
+
+    protected \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date;
 
     protected \Laminas\Filter\HtmlEntities $htmlEntities;
 
     public function __construct(
         \MageSuite\GoogleReviewsFeed\Model\ReviewList $reviewList,
-        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date,
-        \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
+        \MageSuite\GoogleReviewsFeed\Model\ProductDataRepository $productDataRepository,
+        \MageSuite\GoogleReviewsFeed\Model\NicknameModifier $nicknameModifier,
         \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration,
+        \Magento\Framework\Stdlib\DateTime\TimezoneInterface $date,
         \Laminas\Filter\HtmlEntities $htmlEntities
     ) {
         $this->reviewList = $reviewList;
-        $this->date = $date;
-        $this->productCollectionFactory = $productCollectionFactory;
+        $this->productDataRepository = $productDataRepository;
+        $this->nicknameModifier = $nicknameModifier;
         $this->configuration = $configuration;
+        $this->date = $date;
         $this->htmlEntities = $htmlEntities;
     }
 
     public function execute(): string
     {
-        $collection = $this->reviewList->getItems();
+        $collection = $this->reviewList->getCollection();
         $lastPage = $collection->getLastPageNumber();
         $page = 1;
 
@@ -62,14 +61,14 @@ class Xml
         $reviewsXml = $feed->appendChild($domDocument->createElement('reviews'));
 
         while ($page <= $lastPage) {
-            $collection->setCurPage($page)->load()->addRateVotes();
+            $collection->setCurPage($page)->load();
+            $this->productDataRepository->processReviewCollection($collection);
 
             foreach ($collection as $review) {
                 $this->addReviewTag($domDocument, $reviewsXml, $review);
             }
 
             $collection->clear();
-            $this->productCache = [];
             $page++;
         }
 
@@ -99,8 +98,8 @@ class Xml
         $contentElement->appendChild($domDocument->createCDATASection($this->filter($review->getDetail())));
         $reviewXml->appendChild($contentElement);
 
-        $product = $this->getProduct($review);
-        $reviewUrl = $reviewXml->appendChild($domDocument->createElement('review_url', $product->getProductUrl()));
+        $productData = $this->getProductData($review);
+        $reviewUrl = $reviewXml->appendChild($domDocument->createElement('review_url', $productData->getUrl()));
         $reviewUrl->setAttribute('type', 'singleton');
 
         $this->addRatingsTag($domDocument, $reviewXml, $review);
@@ -135,13 +134,7 @@ class Xml
         \Magento\Review\Model\Review $review
     ): void {
         $ratingElement = $reviewXml->appendChild($domDocument->createElement('ratings'));
-        $percent = 0;
-
-        if ($review->getRatingVotes() && $review->getRatingVotes()->getFirstItem()) {
-            $percent = $review->getRatingVotes()->getFirstItem()->getPercent();
-        }
-
-        $rating = $percent / 20;
+        $rating = $review->getData('rating_summary') / 20;
         $ratingOverall = $ratingElement->appendChild($domDocument->createElement('overall', (string)$rating));
         $ratingOverall->setAttribute('min', '1');
         $ratingOverall->setAttribute('max', '5');
@@ -152,28 +145,28 @@ class Xml
         \DOMElement $reviewXml,
         \Magento\Review\Model\Review $review
     ): void {
-        $product = $this->getProduct($review);
-        $childProduct = $this->getChildProduct($product);
+        $productData = $this->getProductData($review);
+        $childProduct = $this->getChildProductData($productData, $review);
 
         $productsXml = $reviewXml->appendChild($domDocument->createElement('products'));
         $productXml = $productsXml->appendChild($domDocument->createElement('product'));
         $productIdsXml = $productXml->appendChild($domDocument->createElement('product_ids'));
 
-        $ean = $childProduct->getData('ean');
+        $ean = $childProduct->getEan();
 
         if (!empty($ean)) {
             $gtinsXml = $productIdsXml->appendChild($domDocument->createElement('gtins'));
             $gtinsXml->appendChild($domDocument->createElement('gtin', $this->filter($ean)));
         }
 
-        $sku = $childProduct->getData('sku');
+        $sku = $childProduct->getSku();
 
         if (!empty($sku)) {
             $skusXml = $productIdsXml->appendChild($domDocument->createElement('skus'));
             $skusXml->appendChild($domDocument->createElement('sku', $this->filter($sku)));
         }
 
-        $brand = $childProduct->getAttributeText('brand');
+        $brand = $childProduct->getBrand();
 
         if (!empty($brand)) {
             $brandsXml = $productIdsXml->appendChild($domDocument->createElement('brands'));
@@ -183,63 +176,42 @@ class Xml
         }
 
         $productNameElement = $domDocument->createElement('product_name');
-        $productNameElement->appendChild($domDocument->createTextNode($this->filter($product->getName())));
+        $productNameElement->appendChild($domDocument->createTextNode($this->filter($productData->getName())));
         $productXml->appendChild($productNameElement);
 
-        $productUrl = $product->getProductUrl();
-        $productXml->appendChild($domDocument->createElement('product_url', $productUrl));
+        $productXml->appendChild($domDocument->createElement('product_url', $productData->getUrl()));
     }
 
-    protected function getChildProduct(\Magento\Catalog\Api\Data\ProductInterface $product): ?\Magento\Catalog\Model\Product
-    {
-        if (!$product->isComposite()) {
-            return $product;
+    protected function getChildProductData(
+        \MageSuite\GoogleReviewsFeed\Model\ProductData $productData,
+        \Magento\Review\Model\Review $review
+    ): \MageSuite\GoogleReviewsFeed\Model\ProductData {
+        $childrenIds = $productData->getChildrenIds();
+
+        if (!$productData->isComposite() || empty($childrenIds)) {
+            return $productData;
         }
 
-        $childrenIds = $product->getTypeInstance()->getChildrenIds($product->getId());
-        $entityIds = reset($childrenIds);
-        $collection = $this->productCollectionFactory->create()
-            ->addAttributeToFilter('entity_id', ['in' => $entityIds])
-            ->addAttributeToSelect(['ean', 'brand'])
-            ->setStoreId($product->getStoreId())
-            ->setPageSize(1);
+        foreach ($childrenIds as $childrenId) {
+            return $this->productDataRepository->getProductData($childrenId, $review->getStoreId());
+        }
 
-        return $collection->getFirstItem();
+        return $productData;
     }
 
     protected function modifyNickname(\Magento\Review\Model\Review $review): string
     {
-        $nickname = trim($review->getNickname());
-
-        if (strpos($nickname, '@') !== false) {
-            return '';
-        }
-
-        if (strpos($nickname, ' ') !== false) {
-            list($firstname, $lastname) = explode(' ', $nickname, 2);
-            $nickname = sprintf('%s %s.', $firstname, $lastname[0]);
-        }
+        $nickname = $review->getNickname();
+        $nickname = $this->nicknameModifier->modify($nickname);
 
         return $this->filter($nickname);
     }
 
-    protected function getProduct(\Magento\Review\Model\Review $review): \Magento\Catalog\Model\Product
+    protected function getProductData(\Magento\Review\Model\Review $review): \MageSuite\GoogleReviewsFeed\Model\ProductData
     {
         $productId = $review->getEntityPkValue();
 
-        if (isset($this->productCache[$productId])) {
-            return $this->productCache[$productId];
-        }
-
-        $collection = $this->productCollectionFactory->create()
-            ->addAttributeToFilter('entity_id', $productId)
-            ->addAttributeToSelect(['ean', 'brand', 'name'])
-            ->setStoreId($review->getStoreId())
-            ->setPageSize(1)
-            ->addUrlRewrite();
-        $this->productCache[$productId] = $collection->getFirstItem();
-
-        return $this->productCache[$productId];
+        return $this->productDataRepository->getProductData($productId, $review->getStoreId());
     }
 
     public function filter(string $value): string
