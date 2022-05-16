@@ -49,25 +49,44 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
      */
     public function testIfGenerateProperXmlFile(): void
     {
+        $reviewModel = $this->registry->registry('review_data');
+        $reviewTimestamp = $this->date->date(strtotime($reviewModel->getCreatedAt()))->format('c');
         $this->feedProcessor->execute();
-        $filePath = $this->mediaDirectory->getAbsolutePath() . $this->io->getFilePath();
-        $review = $this->registry->registry('review_data');
-        $reviewTimestamp = $this->date->date(strtotime($review->getCreatedAt()))->format('c');
 
-        $this->assertStringEqualsFile(
-            $filePath,
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
-            '<feed xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-            . ' xsi:noNamespaceSchemaLocation="http://www.google.com/shopping/reviews/schema/product/2.3/product_reviews.xsd">' .
-            '<version>2.3</version><publisher><name>Sample Retailer</name><favicon>http://www.example.com/favicon.png</favicon></publisher>' .
-            "<reviews><review><review_id>{$review->getId()}</review_id><reviewer><name><![CDATA[Nickname]]></name>" .
-            "<reviewer_id>1</reviewer_id></reviewer><review_timestamp>{$reviewTimestamp}</review_timestamp>".
-            '<title>Review Summary</title><content><![CDATA[Review text]]></content><review_url type="singleton">http://localhost/index.php/simple-product.html</review_url>'.
-            '<ratings><overall min="1" max="5">2</overall></ratings>' .
-            '<products><product><product_ids><skus><sku>simple</sku></skus></product_ids><product_name>Simple Product</product_name>' .
-            "<product_url>http://localhost/index.php/simple-product.html</product_url></product></products></review></reviews></feed>\n"
-        );
-        $this->mediaDirectory->delete($filePath);
+        $domDocument = new \DOMDocument();
+        $domDocument->load($this->getFilePath());
+
+        $publisher = $domDocument->getElementsByTagName('publisher')->item(0);
+        $xpath = new \DOMXpath($domDocument);
+        $expectedPublisher = [
+            'name' => 'Sample Retailer',
+            'favicon' => 'http://www.example.com/favicon.png'
+        ];
+
+        foreach ($expectedPublisher as $attribute => $attributeValue) {
+            $query = $xpath->query($attribute, $publisher);
+            $this->assertEquals($attributeValue, $query->item(0)->textContent);
+        }
+
+        $review = $domDocument->getElementsByTagName('review')->item(0);
+        $expectedReview = [
+            'review_id' => $reviewModel->getId(),
+            'reviewer/name' => 'Nickname',
+            'reviewer/reviewer_id' => 1,
+            'review_timestamp' => $reviewTimestamp,
+            'title' => 'Review Summary',
+            'content' => 'Review text',
+            'review_url' => 'http://localhost/index.php/simple-product.html',
+            'ratings/overall' => 2,
+            'products/product/product_ids/skus/sku' => 'simple',
+            'products/product/product_name' => 'Simple Product',
+            'products/product/product_url' => 'http://localhost/index.php/simple-product.html'
+        ];
+
+        foreach ($expectedReview as $attribute => $attributeValue) {
+            $query = $xpath->query($attribute, $review);
+            $this->assertEquals($attributeValue, $query->item(0)->textContent);
+        }
     }
 
     /**
@@ -78,24 +97,84 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
      */
     public function testIfGenerateProperXmlFileForGroupedProduct(): void
     {
-        $this->feedProcessor->execute();
-        $filePath = $this->mediaDirectory->getAbsolutePath() . $this->io->getFilePath();
-        $review = $this->registry->registry('review_data_grouped');
-        $reviewTimestamp = $this->date->date(strtotime($review->getCreatedAt()))->format('c');
+        $reviewModel = $this->registry->registry('review_data_grouped');
+        $reviewTimestamp = $this->date->date(strtotime($reviewModel->getCreatedAt()))->format('c');
 
-        $this->assertStringEqualsFile(
-            $filePath,
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n".
-            '<feed xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-            . ' xsi:noNamespaceSchemaLocation="http://www.google.com/shopping/reviews/schema/product/2.3/product_reviews.xsd">' .
-            '<version>2.3</version><publisher><name>Sample Retailer</name><favicon>http://www.example.com/favicon.png</favicon></publisher>' .
-            "<reviews><review><review_id>{$review->getId()}</review_id><reviewer><name><![CDATA[Nickname]]></name>" .
-            "<reviewer_id>1</reviewer_id></reviewer><review_timestamp>{$reviewTimestamp}</review_timestamp>".
-            '<title>Review Summary</title><content><![CDATA[Review text]]></content><review_url type="singleton">http://localhost/index.php/grouped-product.html</review_url>'.
-            '<ratings><overall min="1" max="5">2</overall></ratings>' .
-            '<products><product><product_ids><skus><sku>simple_11</sku></skus></product_ids><product_name>Simple 11</product_name>' .
-            "<product_url>http://localhost/index.php/grouped-product.html</product_url></product></products></review></reviews></feed>\n"
-        );
-        $this->mediaDirectory->delete($filePath);
+        $this->feedProcessor->execute();
+        $domDocument = new \DOMDocument();
+        $domDocument->load($this->getFilePath());
+        $review = $domDocument->getElementsByTagName('review')->item(0);
+        $xpath = new \DOMXpath($domDocument);
+        $expectedReview = [
+            'review_id' => $reviewModel->getId(),
+            'reviewer/name' => 'Nickname',
+            'reviewer/reviewer_id' => 1,
+            'review_timestamp' => $reviewTimestamp,
+            'title' => 'Review Summary',
+            'content' => 'Review text',
+            'review_url' => 'http://localhost/index.php/grouped-product.html',
+            'ratings/overall' => 2,
+            'products/product/product_ids/skus/sku' => 'simple_11',
+            'products/product/product_name' => 'Simple 11',
+            'products/product/product_url' => 'http://localhost/index.php/grouped-product.html'
+        ];
+
+        foreach ($expectedReview as $attribute => $attributeValue) {
+            $query = $xpath->query($attribute, $review);
+            $this->assertEquals($attributeValue, $query->item(0)->textContent);
+        }
+    }
+
+    /**
+     * @magentoDbIsolation enabled
+     * @magentoAppIsolation enabled
+     * @magentoConfigFixture default/reviews_feed/general/enabled 1
+     * @magentoDataFixture MageSuite_GoogleReviewsFeed::Test/Integration/_files/multiple_reviews.php
+     */
+    public function testIfGenerateProperXmlFileForMultipleReviews(): void
+    {
+        $this->feedProcessor->execute();
+        $domDocument = new \DOMDocument();
+        $domDocument->load($this->getFilePath());
+        $expectedReviews = [
+            [
+                'reviewer/name' => 'Nickname',
+                'title' => '1 filter second review',
+                'content' => 'Review text',
+                'review_url' => 'http://localhost/index.php/simple-product3.html',
+                'products/product/product_ids/skus/sku' => 'simple3',
+                'products/product/product_name' => 'Simple Product3',
+                'products/product/product_url' => 'http://localhost/index.php/simple-product3.html'
+            ],
+            [
+                'reviewer/name' => 'Nickname',
+                'title' => '2 filter first review',
+                'content' => 'Review text',
+                'review_url' => 'http://localhost/index.php/simple-product2.html',
+                'products/product/product_ids/skus/sku' => 'simple2',
+                'products/product/product_name' => 'Simple Product2',
+                'products/product/product_url' => 'http://localhost/index.php/simple-product2.html'
+            ]
+        ];
+
+        foreach ($expectedReviews as $key => $expectedReview) {
+            $review = $domDocument->getElementsByTagName('review')->item($key);
+            $xpath = new \DOMXpath($domDocument);
+
+            foreach ($expectedReview as $attribute => $attributeValue) {
+                $query = $xpath->query($attribute, $review);
+                $this->assertEquals($attributeValue, $query->item(0)->textContent);
+            }
+        }
+    }
+
+    protected function getFilePath(): string
+    {
+        return $this->mediaDirectory->getAbsolutePath() . $this->io->getFilePath();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->mediaDirectory->delete($this->getFilePath());
     }
 }
