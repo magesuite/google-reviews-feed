@@ -3,5 +3,5 @@ $resolver = \Magento\TestFramework\Workaround\Override\Fixture\Resolver::getInst
 $resolver->requireDataFixture('Magento/Review/_files/product_review_with_rating.php');
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 $registry = $objectManager->get(\Magento\Framework\Registry::class);
-$review = $registry->registry( 'review_data');
+$review = $registry->registry('review_data');
 $review->aggregate();

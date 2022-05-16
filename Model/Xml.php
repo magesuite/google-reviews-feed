@@ -176,10 +176,17 @@ class Xml
         }
 
         $productNameElement = $domDocument->createElement('product_name');
-        $productNameElement->appendChild($domDocument->createTextNode($this->filter($productData->getName())));
+        $productNameElement->appendChild($domDocument->createTextNode($this->filter($childProduct->getName())));
         $productXml->appendChild($productNameElement);
 
         $productXml->appendChild($domDocument->createElement('product_url', $productData->getUrl()));
+    }
+
+    protected function getProductData(\Magento\Review\Model\Review $review): \MageSuite\GoogleReviewsFeed\Model\ProductData
+    {
+        $productId = $review->getEntityPkValue();
+
+        return $this->productDataRepository->getProductData($productId, $review->getStoreId());
     }
 
     protected function getChildProductData(
@@ -205,13 +212,6 @@ class Xml
         $nickname = $this->nicknameModifier->modify($nickname);
 
         return $this->filter($nickname);
-    }
-
-    protected function getProductData(\Magento\Review\Model\Review $review): \MageSuite\GoogleReviewsFeed\Model\ProductData
-    {
-        $productId = $review->getEntityPkValue();
-
-        return $this->productDataRepository->getProductData($productId, $review->getStoreId());
     }
 
     public function filter(string $value): string
