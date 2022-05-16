@@ -4,5 +4,3 @@
     'MageSuite_GoogleReviewsFeed',
     __DIR__
 );
-
-
