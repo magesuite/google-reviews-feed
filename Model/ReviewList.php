@@ -30,22 +30,18 @@ class ReviewList
             ->addStatusFilter(\Magento\Review\Model\Review::STATUS_APPROVED)
             ->setDateOrder();
         $collection->getSelect()->columns('detail.store_id');
-        $this->addRatingSummaryInfo($collection);
+        $this->addRatingPercent($collection);
 
         return $collection;
     }
 
-    protected function addRatingSummaryInfo(\Magento\Review\Model\ResourceModel\Review\Collection $collection): void
+    protected function addRatingPercent(\Magento\Review\Model\ResourceModel\Review\Collection $collection): void
     {
-        $conditions = implode(' AND ', [
-            'main_table.entity_pk_value = summary.entity_pk_value',
-            'detail.store_id = summary.store_id'
-        ]);
         $collection->getSelect()->join(
-            ['summary' => $collection->getTable('review_entity_summary')],
-            $conditions,
-            ['summary.rating_summary']
-        );
+            ['rov' => $collection->getTable('rating_option_vote')],
+            'main_table.review_id = rov.review_id',
+            ['rating_percent' => 'rov.percent']
+        )->group('main_table.review_id');
     }
 
     protected function getEntityId(): int

@@ -134,7 +134,8 @@ class Xml
         \Magento\Review\Model\Review $review
     ): void {
         $ratingElement = $reviewXml->appendChild($domDocument->createElement('ratings'));
-        $rating = $review->getData('rating_summary') / 20;
+        $rating = $review->getData('rating_percent') / 20;
+        $rating = max(1, $rating);
         $ratingOverall = $ratingElement->appendChild($domDocument->createElement('overall', (string)$rating));
         $ratingOverall->setAttribute('min', '1');
         $ratingOverall->setAttribute('max', '5');

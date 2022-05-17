@@ -2,6 +2,9 @@
 $resolver = \Magento\TestFramework\Workaround\Override\Fixture\Resolver::getInstance();
 $resolver->requireDataFixture('Magento/Catalog/_files/multiple_products.php');
 $objectManager =  \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+$storeId =  $objectManager->get(
+    \Magento\Store\Model\StoreManagerInterface::class
+)->getStore()->getId();
 $review = $objectManager->create(
     \Magento\Review\Model\Review::class,
     ['data' => ['nickname' => 'Nickname', 'title' => 'Review Summary', 'detail' => 'Review text']]
@@ -13,17 +16,32 @@ $review->setEntityId(
 )->setStatusId(
     \Magento\Review\Model\Review::STATUS_APPROVED
 )->setStoreId(
-    $objectManager->get(
-        \Magento\Store\Model\StoreManagerInterface::class
-    )->getStore()->getId()
+    $storeId
 )->setStores(
-    [
-        $objectManager->get(
-            \Magento\Store\Model\StoreManagerInterface::class
-        )->getStore()->getId()
-    ]
+    [$storeId]
 )->save();
-$review->aggregate();
+
+$ratingCollection = $objectManager->create(
+    \Magento\Review\Model\Rating::class
+)->getCollection()
+    ->setPageSize(2)
+    ->setCurPage(1);
+
+foreach ($ratingCollection as $rating) {
+    $rating->setStores([$storeId])->setIsActive(1)->save();
+}
+
+foreach ($ratingCollection as $rating) {
+    $ratingOption = $objectManager
+        ->create(\Magento\Review\Model\Rating\Option::class)
+        ->getCollection()
+        ->setPageSize(1)
+        ->setCurPage(2)
+        ->addRatingFilter($rating->getId())
+        ->getFirstItem();
+    $rating->setReviewId($review->getId())
+        ->addOptionVote($ratingOption->getId(), 10);
+}
 
 /*
  * Added a sleep because in a few tests the sql query orders by created at. Without the sleep the reviews
@@ -42,17 +60,32 @@ $review->setEntityId(
 )->setStatusId(
     \Magento\Review\Model\Review::STATUS_APPROVED
 )->setStoreId(
-    $objectManager->get(
-        \Magento\Store\Model\StoreManagerInterface::class
-    )->getStore()->getId()
+    $storeId
 )->setStores(
-    [
-        $objectManager->get(
-            \Magento\Store\Model\StoreManagerInterface::class
-        )->getStore()->getId()
-    ]
+    [$storeId]
 )->save();
-$review->aggregate();
+
+$ratingCollection = $objectManager->create(
+    \Magento\Review\Model\Rating::class
+)->getCollection()
+    ->setPageSize(2)
+    ->setCurPage(1);
+
+foreach ($ratingCollection as $rating) {
+    $rating->setStores([$storeId])->setIsActive(1)->save();
+}
+
+foreach ($ratingCollection as $rating) {
+    $ratingOption = $objectManager
+        ->create(\Magento\Review\Model\Rating\Option::class)
+        ->getCollection()
+        ->setPageSize(1)
+        ->setCurPage(2)
+        ->addRatingFilter($rating->getId())
+        ->getFirstItem();
+    $rating->setReviewId($review->getId())
+        ->addOptionVote($ratingOption->getId(), 11);
+}
 
 /*
  * Added a sleep because in a few tests the sql query orders by created at. Without the sleep the reviews
@@ -71,14 +104,29 @@ $review->setEntityId(
 )->setStatusId(
     \Magento\Review\Model\Review::STATUS_APPROVED
 )->setStoreId(
-    \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
-        \Magento\Store\Model\StoreManagerInterface::class
-    )->getStore()->getId()
+    $storeId
 )->setStores(
-    [
-        \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
-            \Magento\Store\Model\StoreManagerInterface::class
-        )->getStore()->getId()
-    ]
+    [$storeId]
 )->save();
-$review->aggregate();
+
+$ratingCollection = $objectManager->create(
+    \Magento\Review\Model\Rating::class
+)->getCollection()
+    ->setPageSize(2)
+    ->setCurPage(1);
+
+foreach ($ratingCollection as $rating) {
+    $rating->setStores([$storeId])->setIsActive(1)->save();
+}
+
+foreach ($ratingCollection as $rating) {
+    $ratingOption = $objectManager
+        ->create(\Magento\Review\Model\Rating\Option::class)
+        ->getCollection()
+        ->setPageSize(1)
+        ->setCurPage(2)
+        ->addRatingFilter($rating->getId())
+        ->getLastItem();
+    $rating->setReviewId($review->getId())
+        ->addOptionVote($ratingOption->getId(), 12);
+}
