@@ -16,7 +16,7 @@ $review->setEntityId(
 )->setStatusId(
     \Magento\Review\Model\Review::STATUS_APPROVED
 )->setStoreId(
-   $storeId
+    $storeId
 )->setStores(
     [$storeId]
 )->save();
