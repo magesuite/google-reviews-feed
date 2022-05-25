@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider;
+namespace MageSuite\GoogleReviewsFeed\Model\ResourceModel\ChildrenIdsProvider;
 
 interface ChildrenIdsProviderInterface
 {

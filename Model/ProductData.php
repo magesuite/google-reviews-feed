@@ -11,7 +11,7 @@ class ProductData
 
     protected string $sku;
 
-    protected string $ean;
+    protected string $gtin;
 
     protected string $brand;
 
@@ -21,12 +21,12 @@ class ProductData
 
     protected array $childrenIds;
 
-    public function __construct($id, $name, $sku, $ean, $brand, $url, $isComposite, $childrenIds)
+    public function __construct($id, $name, $sku, $gtin, $brand, $url, $isComposite, $childrenIds)
     {
         $this->id = (int)$id;
         $this->name = (string)$name;
         $this->sku = (string)$sku;
-        $this->ean = (string)$ean;
+        $this->gtin = (string)$gtin;
         $this->brand = (string)$brand;
         $this->url = (string)$url;
         $this->isComposite = (bool)$isComposite;
@@ -48,9 +48,9 @@ class ProductData
         return $this->sku;
     }
 
-    public function getEan(): string
+    public function getGtin(): string
     {
-        return $this->ean;
+        return $this->gtin;
     }
 
     public function getBrand(): string

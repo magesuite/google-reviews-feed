@@ -10,6 +10,7 @@ class Configuration extends \Magento\Framework\App\Helper\AbstractHelper
     const XML_PATH_GENERAL_PUBLISHER_FAVICON_URL = 'reviews_feed/general/publisher_favicon_url';
     const XML_PATH_FEED_FILENAME = 'reviews_feed/feed/filename';
     const XML_PATH_FEED_PATH = 'reviews_feed/feed/path';
+    const XML_PATH_FEED_GTIN_ATTRIBUTE = 'reviews_feed/feed/gtin_attribute';
 
     public function isEnabled(): bool
     {
@@ -34,5 +35,10 @@ class Configuration extends \Magento\Framework\App\Helper\AbstractHelper
     public function getFeedPath(): string
     {
         return (string)$this->scopeConfig->getValue(self::XML_PATH_FEED_PATH);
+    }
+
+    public function getGtinAttribute(): string
+    {
+        return (string)$this->scopeConfig->getValue(self::XML_PATH_FEED_GTIN_ATTRIBUTE);
     }
 }

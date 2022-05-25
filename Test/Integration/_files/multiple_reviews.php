@@ -1,8 +1,11 @@
 <?php
 $resolver = \Magento\TestFramework\Workaround\Override\Fixture\Resolver::getInstance();
 $resolver->requireDataFixture('Magento/Catalog/_files/multiple_products.php');
-$objectManager =  \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-$storeId =  $objectManager->get(
+$resolver->requireDataFixture('MageSuite_GoogleReviewsFeed::Test/Integration/_files/ean_attribute.php');
+$resolver->requireDataFixture('MageSuite_GoogleReviewsFeed::Test/Integration/_files/brand.php');
+$objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
+$productRepository = $objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+$storeId = $objectManager->get(
     \Magento\Store\Model\StoreManagerInterface::class
 )->getStore()->getId();
 $review = $objectManager->create(
@@ -129,4 +132,13 @@ foreach ($ratingCollection as $rating) {
         ->getLastItem();
     $rating->setReviewId($review->getId())
         ->addOptionVote($ratingOption->getId(), 12);
+}
+
+$productIds = [10, 11, 12];
+
+foreach ($productIds as $productId) {
+    $product = $productRepository->getById($productId);
+    $product->setEan('10000000');
+    $product->setBrand(600);
+    $productRepository->save($product);
 }

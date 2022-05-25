@@ -11,6 +11,7 @@
             <feed>
                 <filename>feed.xml</filename>
                 <path>googe-product-reviews/</path>
+                <gtin_attribute>ean</gtin_attribute>
             </feed>
         </reviews_feed>
     </default>
