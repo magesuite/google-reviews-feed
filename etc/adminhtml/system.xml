@@ -36,6 +36,10 @@
                     <backend_model>MageSuite\GoogleReviewsFeed\Model\Config\Backend\Path</backend_model>
                     <comment>Folder must exist in pub/media folder</comment>
                 </field>
+                <field id="gtin_attribute" translate="label" type="select" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>GTIN Attribute</label>
+                    <source_model>MageSuite\GoogleReviewsFeed\Model\Config\Source\Product\Attribute</source_model>
+                </field>
             </group>
         </section>
     </system>

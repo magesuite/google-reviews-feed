@@ -9,9 +9,9 @@
     <type name="\MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider">
         <arguments>
             <argument name="childrenIdsProvider" xsi:type="array">
-                <item name="bundle" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider\Bundle</item>
-                <item name="configurable" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider\Configurable</item>
-                <item name="grouped" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider\Grouped</item>
+                <item name="bundle" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ResourceModel\ChildrenIdsProvider\Bundle</item>
+                <item name="configurable" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ResourceModel\ChildrenIdsProvider\Configurable</item>
+                <item name="grouped" xsi:type="object">MageSuite\GoogleReviewsFeed\Model\ResourceModel\ChildrenIdsProvider\Grouped</item>
             </argument>
         </arguments>
     </type>

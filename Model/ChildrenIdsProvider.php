@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace MageSuite\GoogleReviewsFeed\Model;
 
-class ChildrenIdsProvider implements \MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider\ChildrenIdsProviderInterface
+class ChildrenIdsProvider implements \MageSuite\GoogleReviewsFeed\Model\ResourceModel\ChildrenIdsProvider\ChildrenIdsProviderInterface
 {
     protected $childrenIdsProvider;
 

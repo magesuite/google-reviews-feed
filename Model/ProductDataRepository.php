@@ -15,14 +15,18 @@ class ProductDataRepository
 
     protected \MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider $childrenIdsProvider;
 
+    protected \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration;
+
     public function __construct(
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
         \MageSuite\GoogleReviewsFeed\Model\ProductDataFactory $productDataFactory,
-        \MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider $childrenIdsProvider
+        \MageSuite\GoogleReviewsFeed\Model\ChildrenIdsProvider $childrenIdsProvider,
+        \MageSuite\GoogleReviewsFeed\Helper\Configuration $configuration
     ) {
         $this->productCollectionFactory = $productCollectionFactory;
         $this->productDataFactory = $productDataFactory;
         $this->childrenIdsProvider = $childrenIdsProvider;
+        $this->configuration = $configuration;
     }
 
     /**
@@ -51,7 +55,7 @@ class ProductDataRepository
             $productCollection = $this->productCollectionFactory->create()
                 ->setStoreId($storeId)
                 ->addAttributeToFilter('entity_id', ['in' => $productIds])
-                ->addAttributeToSelect(['ean', 'brand', 'name'])
+                ->addAttributeToSelect(['brand', 'name', $this->getGtinAttribute()])
                 ->addUrlRewrite();
 
             foreach ($productCollection as $product) {
@@ -85,7 +89,7 @@ class ProductDataRepository
             'id' => $product->getId(),
             'name' => $product->getName(),
             'sku' => $product->getSku(),
-            'ean' => $product->getEan(),
+            'gtin' => $product->getData($this->getGtinAttribute()),
             'brand' => $product->getAttributeText('brand'),
             'url' => $product->getProductUrl(),
             'isComposite' => $product->isComposite(),
@@ -123,5 +127,10 @@ class ProductDataRepository
         }
 
         return $this->childIds;
+    }
+
+    protected function getGtinAttribute(): string
+    {
+        return $this->configuration->getGtinAttribute();
     }
 }

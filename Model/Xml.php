@@ -65,6 +65,10 @@ class Xml
             $this->productDataRepository->processReviewCollection($collection);
 
             foreach ($collection as $review) {
+                if (!$this->hasAllRequiredAttributesValues($review)) {
+                    continue;
+                }
+
                 $this->addReviewTag($domDocument, $reviewsXml, $review);
             }
 
@@ -73,6 +77,25 @@ class Xml
         }
 
         return $domDocument->saveXML();
+    }
+
+    protected function hasAllRequiredAttributesValues(\Magento\Review\Model\Review $review): bool
+    {
+        $productData = $this->getProductData($review);
+        $childProduct = $this->getChildProductData($productData, $review);
+        $attributes = ['gtin', 'sku', 'brand'];
+
+        foreach ($attributes as $attribute) {
+            $methodName = 'get' . ucfirst($attribute);
+
+            if (!empty($childProduct->$methodName())) {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     protected function addReviewTag(
@@ -90,12 +113,12 @@ class Xml
 
         if (!empty($review->getTitle())) {
             $titleElement = $domDocument->createElement('title');
-            $titleElement->appendChild($domDocument->createTextNode($this->filter($review->getTitle())));
+            $titleElement->appendChild($domDocument->createTextNode($review->getTitle()));
             $reviewXml->appendChild($titleElement);
         }
 
         $contentElement = $domDocument->createElement('content');
-        $contentElement->appendChild($domDocument->createCDATASection($this->filter($review->getDetail())));
+        $contentElement->appendChild($domDocument->createCDATASection($review->getDetail()));
         $reviewXml->appendChild($contentElement);
 
         $productData = $this->getProductData($review);
@@ -153,19 +176,13 @@ class Xml
         $productXml = $productsXml->appendChild($domDocument->createElement('product'));
         $productIdsXml = $productXml->appendChild($domDocument->createElement('product_ids'));
 
-        $ean = $childProduct->getEan();
-
-        if (!empty($ean)) {
-            $gtinsXml = $productIdsXml->appendChild($domDocument->createElement('gtins'));
-            $gtinsXml->appendChild($domDocument->createElement('gtin', $this->filter($ean)));
-        }
+        $gtin = $childProduct->getGtin();
+        $gtinsXml = $productIdsXml->appendChild($domDocument->createElement('gtins'));
+        $gtinsXml->appendChild($domDocument->createElement('gtin', $this->filter($gtin)));
 
         $sku = $childProduct->getSku();
-
-        if (!empty($sku)) {
-            $skusXml = $productIdsXml->appendChild($domDocument->createElement('skus'));
-            $skusXml->appendChild($domDocument->createElement('sku', $this->filter($sku)));
-        }
+        $skusXml = $productIdsXml->appendChild($domDocument->createElement('skus'));
+        $skusXml->appendChild($domDocument->createElement('sku', $this->filter($sku)));
 
         $brand = $childProduct->getBrand();
 

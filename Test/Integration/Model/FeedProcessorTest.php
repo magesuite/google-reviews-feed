@@ -79,6 +79,8 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
             'review_url' => 'http://localhost/index.php/simple-product.html',
             'ratings/overall' => 2,
             'products/product/product_ids/skus/sku' => 'simple',
+            'products/product/product_ids/gtins/gtin' => '10000000',
+            'products/product/product_ids/brands/brand' => 'Example Brand',
             'products/product/product_name' => 'Simple Product',
             'products/product/product_url' => 'http://localhost/index.php/simple-product.html'
         ];
@@ -115,6 +117,8 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
             'review_url' => 'http://localhost/index.php/grouped-product.html',
             'ratings/overall' => 2,
             'products/product/product_ids/skus/sku' => 'simple_11',
+            'products/product/product_ids/gtins/gtin' => '10000000',
+            'products/product/product_ids/brands/brand' => 'Example Brand',
             'products/product/product_name' => 'Simple 11',
             'products/product/product_url' => 'http://localhost/index.php/grouped-product.html'
         ];
@@ -144,6 +148,8 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
                 'ratings/overall' => '2',
                 'review_url' => 'http://localhost/index.php/simple-product3.html',
                 'products/product/product_ids/skus/sku' => 'simple3',
+                'products/product/product_ids/gtins/gtin' => '10000000',
+                'products/product/product_ids/brands/brand' => 'Example Brand',
                 'products/product/product_name' => 'Simple Product3',
                 'products/product/product_url' => 'http://localhost/index.php/simple-product3.html'
             ],
@@ -154,6 +160,8 @@ class FeedProcessorTest extends \PHPUnit\Framework\TestCase
                 'ratings/overall' => '2',
                 'review_url' => 'http://localhost/index.php/simple-product2.html',
                 'products/product/product_ids/skus/sku' => 'simple2',
+                'products/product/product_ids/gtins/gtin' => '10000000',
+                'products/product/product_ids/brands/brand' => 'Example Brand',
                 'products/product/product_name' => 'Simple Product2',
                 'products/product/product_url' => 'http://localhost/index.php/simple-product2.html'
             ]

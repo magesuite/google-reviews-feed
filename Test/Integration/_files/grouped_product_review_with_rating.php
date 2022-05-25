@@ -2,6 +2,8 @@
 $resolver = \Magento\TestFramework\Workaround\Override\Fixture\Resolver::getInstance();
 $resolver->requireDataFixture('Magento/Customer/_files/customer.php');
 $resolver->requireDataFixture('Magento/GroupedProduct/_files/product_grouped_with_simple.php');
+$resolver->requireDataFixture('MageSuite_GoogleReviewsFeed::Test/Integration/_files/ean_attribute.php');
+$resolver->requireDataFixture('MageSuite_GoogleReviewsFeed::Test/Integration/_files/brand.php');
 \Magento\TestFramework\Helper\Bootstrap::getInstance()->loadArea(
     \Magento\Backend\App\Area\FrontNameResolver::AREA_CODE
 );
@@ -9,6 +11,10 @@ $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 $customerRegistry = $objectManager->create(\Magento\Customer\Model\CustomerRegistry::class);
 $customer = $customerRegistry->retrieve(1);
 $productRepository = $objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+$productSimple = $productRepository->get('simple_11');
+$productSimple->setEan('10000000');
+$productSimple->setBrand(600);
+$productRepository->save($productSimple);
 $product = $productRepository->get('grouped');
 $storeId = $objectManager->get(
     \Magento\Store\Model\StoreManagerInterface::class

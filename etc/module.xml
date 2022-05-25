@@ -3,6 +3,7 @@
     <module name="MageSuite_GoogleReviewsFeed">
         <sequence>
             <module name="Magento_Review"/>
+            <module name="MageSuite_BrandManagement"/>
         </sequence>
     </module>
 </config>
