@@ -28,6 +28,7 @@ class ReviewList
             ->addFieldToFilter('main_table.entity_id', $this->getEntityId())
             ->addFieldToFilter('main_table.entity_pk_value', ['gt' => 0])
             ->addFieldToFilter('detail.detail', ['nlike' => '%http%'])
+            ->addFieldToFilter('detail.detail', ['nlike' => ''])
             ->addStatusFilter(\Magento\Review\Model\Review::STATUS_APPROVED)
             ->setDateOrder();
         $collection->getSelect()->columns('detail.store_id');
