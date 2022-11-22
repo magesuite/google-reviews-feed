@@ -234,6 +234,8 @@ class Xml
 
     public function filter(string $value): string
     {
+        $value = trim($value);
+
         return $this->htmlEntities->filter($value);
     }
 }
