@@ -6,11 +6,11 @@ namespace MageSuite\GoogleReviewsFeed\Model;
 class FeedProcessor
 {
     protected \MageSuite\GoogleReviewsFeed\Model\Xml $xmlContent;
-    
+
     protected \MageSuite\GoogleReviewsFeed\Model\Io $io;
-    
+
     protected \Psr\Log\LoggerInterface $logger;
-    
+
     public function __construct(
         \MageSuite\GoogleReviewsFeed\Model\Xml $xmlContent,
         \MageSuite\GoogleReviewsFeed\Model\Io $io,
