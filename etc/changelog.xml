@@ -15,6 +15,13 @@
                     <ticket_id>IPET-1466</ticket_id>
                 </entry>
             </tag>
+            <tag version="1.0.3" date="2024-02-07">
+                <entry>
+                    <type>FEATURE</type>
+                    <overview>Add possibility to customize product data</overview>
+                    <ticket_id>IPET-2448</ticket_id>
+                </entry>
+            </tag>
         </changelog>
     </module>
 </config>
