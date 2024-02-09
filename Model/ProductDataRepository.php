@@ -5,9 +5,9 @@ namespace MageSuite\GoogleReviewsFeed\Model;
 
 class ProductDataRepository
 {
-    protected $productDataCache = [];
+    protected array $productDataCache = [];
 
-    protected $childIds = null;
+    protected ?array $childIds = null;
 
     protected \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory;
 
@@ -55,7 +55,7 @@ class ProductDataRepository
             $productCollection = $this->productCollectionFactory->create()
                 ->setStoreId($storeId)
                 ->addAttributeToFilter('entity_id', ['in' => $productIds])
-                ->addAttributeToSelect(['brand', 'name', $this->getGtinAttribute()])
+                ->addAttributeToSelect(['brand', 'name', 'visibility', 'url_key', $this->getGtinAttribute()])
                 ->addUrlRewrite();
 
             foreach ($productCollection as $product) {
@@ -65,6 +65,20 @@ class ProductDataRepository
             $productCollection->clear();
             $this->childIds = null;
         }
+    }
+
+    public function prepareProductData(\Magento\Catalog\Model\Product $product): array
+    {
+        return [
+            'id' => $product->getId(),
+            'name' => $product->getName(),
+            'sku' => $product->getSku(),
+            'gtin' => $product->getData($this->getGtinAttribute()),
+            'brand' => $product->getAttributeText('brand'),
+            'url' => $product->getProductUrl(),
+            'isComposite' => $product->isComposite(),
+            'childrenIds' => $this->childIds[$product->getId()] ?? []
+        ];
     }
 
     protected function addChildProductIds(array &$productIdsByStoreId): void
@@ -85,16 +99,8 @@ class ProductDataRepository
 
     protected function addProductToCache(\Magento\Catalog\Model\Product $product): void
     {
-        $productData = [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'sku' => $product->getSku(),
-            'gtin' => $product->getData($this->getGtinAttribute()),
-            'brand' => $product->getAttributeText('brand'),
-            'url' => $product->getProductUrl(),
-            'isComposite' => $product->isComposite(),
-            'childrenIds' => $this->childIds[$product->getId()] ?? []
-        ];
+        $productData = $this->prepareProductData($product);
+
         $this->productDataCache[$product->getStoreId()][$product->getId()] = $this->productDataFactory->create($productData);
     }
 
@@ -109,8 +115,7 @@ class ProductDataRepository
                 $productIdsByStore[$review->getStoreId()] = [];
             }
 
-            if (in_array($productId, $productIdsByStore[$review->getStoreId()])
-                || isset($this->productDataCache[$review->getStoreId()][$productId])) {
+            if (in_array($productId, $productIdsByStore[$review->getStoreId()]) || isset($this->productDataCache[$review->getStoreId()][$productId])) {
                 continue;
             }
 
